@@ -1,0 +1,28 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: upload-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/upload/**
+        - id: transcription-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/transcript/**
+
+  # (Optional) CORS config — poți adapta
+  web:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: gateway

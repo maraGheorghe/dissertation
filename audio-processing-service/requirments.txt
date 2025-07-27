@@ -1,0 +1,15 @@
+boto3
+kafka-python
+librosa
+torch
+soundfile
+tensorflow
+numpy
+scipy
+pydub
+dotenv
+demucs
+pydub
+git+https://github.com/openai/whisper.git
+torch
+numpy
