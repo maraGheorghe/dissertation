@@ -13,11 +13,11 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AudioFile {
+public class MediaFile {
 
     @Id
     private UUID id;
-
     private String originalName;
+    private String fileExtension;
     private LocalDateTime uploadTime;
 }
