@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",               // Use modern JavaScript
+    "lib": ["DOM", "ES2015"],         // Include DOM and ES6 types
+    "module": "ESNext",               // Let Vite handle modules
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",               // Use the new JSX transform (React 17+)
+    "strict": true,                   // Enable strict typing
+    "esModuleInterop": true,          // Allow default imports from CommonJS
+    "skipLibCheck": true              // Speed up builds by skipping type checks on libraries
+  },
+  "include": ["src", "src/env.d.ts"]
+}

@@ -19,5 +19,9 @@ public class MediaFile {
     private UUID id;
     private String originalName;
     private String fileExtension;
+    private String fileTypeName;
+    private String localFilePath;
+    private String storageKey;
     private LocalDateTime uploadTime;
+
 }

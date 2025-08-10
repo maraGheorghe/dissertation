@@ -4,25 +4,30 @@ server:
 spring:
   cloud:
     gateway:
-      routes:
-        - id: upload-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/upload/**
-        - id: transcription-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/transcript/**
+      server:
+        webflux:
+          routes:
+            - id: upload-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/audio/upload/**
+            - id: transcription-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/transcript/**
 
-  # (Optional) CORS config — poți adapta
-  web:
-    cors:
-      allowed-origins: "*"
-      allowed-methods: "*"
-      allowed-headers: "*"
-
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.web.reactive: DEBUG
+    reactor.netty: DEBUG
+    
 management:
   endpoints:
     web:
       exposure:
         include: gateway
+  endpoint:
+    gateway:
+      access: read

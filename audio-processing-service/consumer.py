@@ -2,13 +2,19 @@ import json
 import os
 import uuid
 from datetime import datetime
+from logging import exception
+
 from kafka import KafkaConsumer
 from pathlib import Path
 from dotenv import load_dotenv
 
 from model.audio_file_event import AudioFileUploadedEvent
 from minio_client import download_audio_file
-from processor.voice_transcriber import transcribe_audio
+from processor.voice_transcriber import transcribe_audio, transcribe_with_whisperx_per_chunk, \
+    transcribe_with_whisper_per_chunk
+from db.session import SessionLocal
+from model.transcript import Transcript
+from model.segment import Segment
 
 load_dotenv()
 
@@ -32,21 +38,47 @@ def parse_event(data: dict) -> AudioFileUploadedEvent:
     )
 
 def handle_audio_uploaded_event(event: AudioFileUploadedEvent):
+    session = SessionLocal()
+
+    # 1. Creează transcript entry
+    transcript = Transcript(id=event.id)
+    session.add(transcript)
+    session.commit()
+
+    # 2. Transcrie fișierul audio în segmente
     local_path = DOWNLOAD_DIR / event.storage_key
     download_audio_file(
         storage_key=event.storage_key,
         destination_path=str(local_path)
     )
 
-    output_path = SEPARATED_DIR / str(event.id)
-    transcription = transcribe_audio(str(local_path))
+    # segments = transcribe_audio(str(local_path))
 
-    print(transcription)
+    # 3. Salvează segmentele
+    for seg in transcribe_with_whisper_per_chunk(str(local_path)):
+        print(seg)
+        s = Segment(
+            transcript_id=event.id,
+            start=seg["start"],
+            end=seg["end"],
+            speaker=seg["speaker"],
+            text=seg["text"]
+        )
+        session.add(s)
+        session.commit()  # poți face și batch dacă vrei performanță
+
+    # 4. Marchează transcriptul ca finalizat
+    transcript.status = "completed"
+    session.commit()
+    session.close()
+
+    print(f"✅ Transcript salvat în DB: {event.id}")
+
 
 def start_consumer():
     prepare_directories()
 
-    print(f"🎧 Listening on topic `{TOPIC}`...")
+    print(f"Listening on topic `{TOPIC}`...")
     consumer = KafkaConsumer(
         TOPIC,
         bootstrap_servers=BOOTSTRAP_SERVERS,
@@ -59,8 +91,13 @@ def start_consumer():
         for message in consumer:
             data = message.value
             event = parse_event(data)
-            print(f"📥 Received event for file: {event.storage_key}")
-            handle_audio_uploaded_event(event)
+            print(f"Received event for file: {event.storage_key}")
+            try:
+                handle_audio_uploaded_event(event)
+            except Exception as e:
+                print("Audio already added.")
+                print(e)
+
 
     except KeyboardInterrupt:
         print("\n🛑 Consumer stopped by user.")

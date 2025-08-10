@@ -68,7 +68,38 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - backend
-      - kafka-net 
+
+  audio-upload-service:
+    build:
+      context: ./audio-upload-service    
+      dockerfile: Dockerfile            
+    container_name: audio-upload-service
+    ports:
+      - "8081:8080"
+    environment:
+      # === Postgres ===
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db1:5432/audioMetadataStorage
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+
+      # === Kafka ===
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka1:19092
+
+      # === MinIO ===
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+
+      # App-specific resources folder
+      RESOURCES_FOLDER: /app/tmp
+    depends_on:
+      - postgres-db1
+      - kafka1
+      - minio
+    networks:
+      - backend
+      - kafka-net
+
 
 volumes:
   pgdata1:
