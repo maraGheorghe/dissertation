@@ -4,7 +4,7 @@ export async function uploadAudioFile(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch(`http://localhost:8081/api/audio/upload`, {
+    const res = await fetch(`http://192.168.1.22:8081/api/audio/upload`, {
         method: "POST",
         body: formData,
     });

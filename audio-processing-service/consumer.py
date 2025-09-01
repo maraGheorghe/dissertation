@@ -4,14 +4,13 @@ import uuid
 from datetime import datetime
 from logging import exception
 
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 from pathlib import Path
 from dotenv import load_dotenv
 
 from model.audio_file_event import AudioFileUploadedEvent
 from minio_client import download_audio_file
-from processor.voice_transcriber import transcribe_audio, transcribe_with_whisperx_per_chunk, \
-    transcribe_with_whisper_per_chunk
+from processor.voice_transcriber import transcribe_with_whisper_per_chunk
 from db.session import SessionLocal
 from model.transcript import Transcript
 from model.segment import Segment
@@ -20,6 +19,7 @@ load_dotenv()
 
 BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 TOPIC = os.getenv("KAFKA_TOPIC")
+TOPIC_PRODUCER = os.getenv("KAFKA_TOPIC_PRODUCER")
 DOWNLOAD_DIR = Path("resources/downloads")
 SEPARATED_DIR = Path("resources/separated")
 
@@ -54,7 +54,6 @@ def handle_audio_uploaded_event(event: AudioFileUploadedEvent):
 
     # segments = transcribe_audio(str(local_path))
 
-    # 3. Salvează segmentele
     for seg in transcribe_with_whisper_per_chunk(str(local_path)):
         print(seg)
         s = Segment(
@@ -65,7 +64,7 @@ def handle_audio_uploaded_event(event: AudioFileUploadedEvent):
             text=seg["text"]
         )
         session.add(s)
-        session.commit()  # poți face și batch dacă vrei performanță
+        session.commit()
 
     # 4. Marchează transcriptul ca finalizat
     transcript.status = "completed"
@@ -86,7 +85,10 @@ def start_consumer():
         enable_auto_commit=True,
         value_deserializer=lambda v: json.loads(v.decode('utf-8'))
     )
-
+    producer = KafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    )
     try:
         for message in consumer:
             data = message.value
@@ -94,6 +96,13 @@ def start_consumer():
             print(f"Received event for file: {event.storage_key}")
             try:
                 handle_audio_uploaded_event(event)
+
+                produced_data = {
+                    "id": str(event.id),
+                }
+
+                producer.send(TOPIC_PRODUCER, value=produced_data)
+                print(f"Event sent to producer: {produced_data}")
             except Exception as e:
                 print("Audio already added.")
                 print(e)
