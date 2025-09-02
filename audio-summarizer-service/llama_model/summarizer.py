@@ -30,12 +30,12 @@ REDUCE_NUM_PREDICT   = int(os.getenv("REDUCE_NUM_PREDICT", "220"))
 # ----------------- Prompts -----------------
 
 PROMPT_LANGUAGE = (
-    "What language is this? \n \"{text}\"\nRespond in one word, the language name."
+    "What language is this? (e.g. english, romanian)\n \"\"\"{text}\"\"\"\nRespond in one word, the language name."
 )
 
 
 PROMPT_SINGLE = (
-    "Summarize the following transcript into clean Markdown. Keep the same language as in the transcript. Include:\n"
+    "Summarize the following transcript into clean Markdown in {lang}. Include:\n"
     "- A short abstract (2–3 sentences)\n"
     "- Then 5–7 concise bullets highlighting key ideas\n\n"
     "Transcript:\n\"\"\"{text}\"\"\""
@@ -43,14 +43,14 @@ PROMPT_SINGLE = (
 
 PROMPT_MAP = (
     "From the following transcript part, extract exactly 3 concise bullets (≤15 words each).\n"
-    "Use the same language.\n"
+    "Write it in the {lang} language.\n"
     "No preamble, just bullets.\n\n"
     "Part:\n\"\"\"{text}\"\"\""
 )
 
 PROMPT_REDUCE = (
     "You are given many bullets extracted from a long transcript. "
-    "Write a final, well-structured summary in the same language as the bullets with:\n"
+    "Write a final, well-structured summary in the {lang} language:\n"
     "- A short summary (≈200–300 words)\n"
     "- bullets with the most important points (≤15 words each)\n"
     "Avoid repetition, merge duplicates, keep names/dates/numbers exact.\n\n"
@@ -136,7 +136,7 @@ def create_summary(event: AudioFileTranslated):
             return
 
         # Warm-up (optional, avoids first-call latency)
-        language = ""
+        language = "english"
         try:
             language = _ollama_generate(PROMPT_LANGUAGE.format(text=full_text[:SINGLE_MAX_CHARS]), num_predict=10)
             print("Found language", language)
@@ -144,21 +144,21 @@ def create_summary(event: AudioFileTranslated):
             pass
 
         if len(full_text) <= SINGLE_MAX_CHARS:
-            final_md = _ollama_generate(PROMPT_SINGLE.format(text=full_text), num_predict=SINGLE_NUM_PREDICT)
+            final_md = _ollama_generate(PROMPT_SINGLE.format(text=full_text, language=language), num_predict=SINGLE_NUM_PREDICT)
 
         else:
             all_bullets: list[str] = []
             for idx, ch in enumerate(_chunks(full_text), 1):
-                mini = _ollama_generate(PROMPT_MAP.format(text=ch), num_predict=MAP_NUM_PREDICT)
+                mini = _ollama_generate(PROMPT_MAP.format(text=ch, language=language), num_predict=MAP_NUM_PREDICT)
                 print(mini)
                 all_bullets.extend(_bullets_only(mini))
 
             if not all_bullets:
-                final_md = _ollama_generate(PROMPT_SINGLE.format(text=full_text[:SINGLE_MAX_CHARS]), num_predict=SINGLE_NUM_PREDICT)
+                final_md = _ollama_generate(PROMPT_SINGLE.format(text=full_text[:SINGLE_MAX_CHARS], language=language), num_predict=SINGLE_NUM_PREDICT)
                 print(final_md)
             else:
                 joined = "\n".join(f"- {b}" for b in all_bullets)
-                final_md = _ollama_generate(PROMPT_REDUCE.format(bullets=joined), num_predict=REDUCE_NUM_PREDICT)
+                final_md = _ollama_generate(PROMPT_REDUCE.format(bullets=joined, language=language), num_predict=REDUCE_NUM_PREDICT)
                 print(final_md)
 
         existing = (
