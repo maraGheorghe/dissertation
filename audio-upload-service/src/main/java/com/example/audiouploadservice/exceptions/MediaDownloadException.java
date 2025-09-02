@@ -5,8 +5,4 @@ public class MediaDownloadException extends RuntimeException {
         super(message);
     }
 
-    public MediaDownloadException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
 }
