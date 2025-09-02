@@ -1,0 +1,17 @@
+boto3
+librosa
+torch
+soundfile
+tensorflow
+numpy
+scipy
+pydub
+dotenv
+demucs
+pydub
+torch
+numpy
+fastapi
+uvicorn
+psycopg2-binary
+python-multipart

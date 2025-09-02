@@ -2,18 +2,17 @@ import json
 import os
 import uuid
 from datetime import datetime
-from logging import exception
 
 from kafka import KafkaConsumer, KafkaProducer
 from pathlib import Path
 from dotenv import load_dotenv
 
-from model.audio_file_event import AudioFileUploadedEvent
-from minio_client import download_audio_file
+from db_model.audio_file_event import AudioFileUploadedEvent
+from storage.minio_client import download_audio_file
 from processor.voice_transcriber import transcribe_with_whisper_per_chunk
-from db.session import SessionLocal
-from model.transcript import Transcript
-from model.segment import Segment
+from storage.session import SessionLocal
+from db_model.transcript import Transcript
+from db_model.segment import Segment
 
 load_dotenv()
 
@@ -109,6 +108,6 @@ def start_consumer():
 
 
     except KeyboardInterrupt:
-        print("\n🛑 Consumer stopped by user.")
+        print("\n Consumer stopped by user.")
     finally:
         consumer.close()

@@ -1,14 +1,14 @@
 from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from db.session import SessionLocal
-from model import Transcript, Segment
+from storage.session import SessionLocal
+from db_model import Transcript, Segment
 from fastapi.middleware.cors import CORSMiddleware
 
-from model.summary import Summary
+from db_model.summary import Summary
 
 app = FastAPI(title="Transcript API")
 

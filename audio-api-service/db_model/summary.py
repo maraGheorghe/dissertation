@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy import Column, Text, ForeignKey
-from model import Base
+from db_model import Base
 
 class Summary(Base):
     __tablename__ = "summaries"

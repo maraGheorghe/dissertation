@@ -1,6 +1,6 @@
 from typing import Dict, Iterator, List, Optional
 
-from model.models import whisper_model
+from processor.models import whisper_model
 
 
 def _pick_speaker(start: float, end: float, diarization: Optional[List[Dict]]) -> Optional[str]:
