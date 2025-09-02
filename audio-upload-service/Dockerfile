@@ -1,5 +1,5 @@
 # =========================
-# Build Stage (Alpine)
+# Build Stage
 # =========================
 FROM gradle:8-jdk17 AS build
 WORKDIR /app
@@ -8,7 +8,6 @@ WORKDIR /app
 COPY build.gradle settings.gradle ./
 COPY gradle/ ./gradle/
 
-# (No ffmpeg here since you only need it at runtime)
 # Pre-fetch dependencies to leverage cache
 RUN --mount=type=cache,target=/home/gradle/.gradle \
     gradle dependencies --no-daemon

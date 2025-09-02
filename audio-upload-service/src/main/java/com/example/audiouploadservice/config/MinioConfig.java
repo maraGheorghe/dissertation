@@ -25,7 +25,7 @@ public class MinioConfig {
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                .endpointOverride(URI.create(minioEndpoint))
+                .endpointOverride(URI.create(minioEndpoint)) //runs locally, not in AWS
                 .region(Region.EU_WEST_1)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))

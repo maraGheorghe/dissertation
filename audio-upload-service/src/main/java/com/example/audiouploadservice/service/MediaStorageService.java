@@ -30,7 +30,6 @@ import java.util.UUID;
 
 @Service
 public class MediaStorageService {
-    private static final String AUDIO_FILE_EXTENSION = ".wav";
     private static final String UPLOAD_ERROR_MESSAGE = "Failed to upload audio file!";
     private static final Set<String> VIDEO_FILE_EXTENSIONS = Set.of(".mp4", ".mov", ".avi", ".wmv", ".webm", ".flv", ".mkv");
 
@@ -56,58 +55,6 @@ public class MediaStorageService {
         this.mediaEventProducer = mediaEventProducer;
     }
 
-    public void saveVideo(MultipartFile multipartFile, String fileName) {
-        try {
-            multipartFile.transferTo(new File(fileName));
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-    }
-
-    public UUID handleVideoFile(MultipartFile mediaMultipartFile) {
-        log.info("Entered handleVideoFile function.");
-        UUID fileId = UUID.randomUUID();
-        // Save video locally
-        var videoFileName = generateStorageVideoFileName(fileId, mediaMultipartFile.getOriginalFilename());
-        var videoLocalFileName = String.format("%s/%s", resourcesFolder, videoFileName);
-        saveVideo(mediaMultipartFile, videoLocalFileName);
-        var videoFile = new File(videoLocalFileName);
-        // Convert video to audio and save it locally
-        var audioFileName = generateMp3StorageFileName(fileId, mediaMultipartFile.getOriginalFilename());
-        var audioLocalFileName = String.format("%s/%s", resourcesFolder, audioFileName);
-        var audioFile = new File(audioLocalFileName);
-        VideoUtils.convertToAudio(videoFile, audioFile);
-        // Audio file is saved locally at audioLocalFileName
-        // Upload the audio file to s3
-        uploadToStorage(audioFile);
-        // Notify the processor that the file was uploaded
-        notifyUploadComplete(fileId, audioFileName, LocalDateTime.now());
-        // Save the file info to the database
-        saveToDatabase(fileId, mediaMultipartFile.getOriginalFilename(), "video", videoLocalFileName, videoFileName, LocalDateTime.now());
-        // Upload the video to the storage also
-        uploadToStorage(videoFile);
-        log.info("Video uploaded with ID: {}", fileId);
-        return fileId;
-    }
-
-    public UUID handleAudioFile(MultipartFile mediaMultipartFile) {
-        log.info("Entered handleAudioFile function.");
-        UUID fileId = UUID.randomUUID();
-        var audioFileName = generateAudioStorageFileName(fileId, mediaMultipartFile.getOriginalFilename());
-        uploadToStorage(mediaMultipartFile, audioFileName);
-        notifyUploadComplete(fileId, audioFileName, LocalDateTime.now());
-        // Save the audio file locally also
-        var audioLocalFileName = String.format("%s/%s", resourcesFolder, audioFileName);
-        var audioFile = new File(audioLocalFileName);
-        try {
-            mediaMultipartFile.transferTo(audioFile);
-            saveToDatabase(fileId, mediaMultipartFile.getOriginalFilename(), "audio", audioLocalFileName, audioFileName, LocalDateTime.now());
-        } catch (IOException e) {
-            log.error("Error while trying to save the audio file locally: ", e);
-        }
-        return fileId;
-    }
-
     public UUID storeFile(MultipartFile mediaMultipartFile) {
         validateAudioFile(mediaMultipartFile);
         if (Objects.isNull(mediaMultipartFile.getOriginalFilename())) {
@@ -118,6 +65,51 @@ public class MediaStorageService {
             return handleVideoFile(mediaMultipartFile);
         }
         return handleAudioFile(mediaMultipartFile);
+    }
+
+    private UUID handleVideoFile(MultipartFile mediaMultipartFile) {
+        log.info("Entered handleVideoFile function.");
+        UUID fileId = UUID.randomUUID();
+        // save video locally
+        var videoFileName = generateStorageVideoFileName(fileId, mediaMultipartFile.getOriginalFilename());
+        var videoLocalFileName = String.format("%s/%s", resourcesFolder, videoFileName);
+        saveVideo(mediaMultipartFile, videoLocalFileName);
+        var videoFile = new File(videoLocalFileName);
+        // convert video to audio and save it locally
+        var audioFileName = generateMp3StorageFileName(fileId);
+        var audioLocalFileName = String.format("%s/%s", resourcesFolder, audioFileName);
+        var audioFile = new File(audioLocalFileName);
+        VideoUtils.convertToAudio(videoFile, audioFile);
+        // upload the audio file to s3
+        uploadToStorage(audioFile);
+        // notify kafka processor that the file was uploaded
+        notifyUploadComplete(fileId, audioFileName, LocalDateTime.now());
+        // save the file metadata to the database
+        saveToDatabase(fileId, mediaMultipartFile.getOriginalFilename(), "video", videoLocalFileName, videoFileName, LocalDateTime.now());
+        // upload the video to the storage also
+        uploadToStorage(videoFile);
+        log.info("Video uploaded with ID: {}", fileId);
+        return fileId;
+    }
+
+    private UUID handleAudioFile(MultipartFile mediaMultipartFile) {
+        log.info("Entered handleAudioFile function.");
+        UUID fileId = UUID.randomUUID();
+        var audioFileName = generateAudioStorageFileName(fileId, mediaMultipartFile.getOriginalFilename());
+        //upload in MinIO
+        uploadToStorage(mediaMultipartFile, audioFileName);
+        //notify kafka
+        notifyUploadComplete(fileId, audioFileName, LocalDateTime.now());
+        // save the audio file locally + db
+        var audioLocalFileName = String.format("%s/%s", resourcesFolder, audioFileName);
+        var audioFile = new File(audioLocalFileName);
+        try {
+            mediaMultipartFile.transferTo(audioFile);
+            saveToDatabase(fileId, mediaMultipartFile.getOriginalFilename(), "audio", audioLocalFileName, audioFileName, LocalDateTime.now());
+        } catch (IOException e) {
+            log.error("Error while trying to save the audio file locally: ", e);
+        }
+        return fileId;
     }
 
     private boolean isVideoFile(String fileName) {
@@ -141,8 +133,16 @@ public class MediaStorageService {
         return fileId + "-audio" + extension;
     }
 
-    private String generateMp3StorageFileName(UUID fileId, String originalFilename) {
+    private String generateMp3StorageFileName(UUID fileId) {
         return fileId + "-audio" + ".mp3";
+    }
+
+    private void saveVideo(MultipartFile multipartFile, String fileName) {
+        try {
+            multipartFile.transferTo(new File(fileName));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void uploadToStorage(MultipartFile file, String fileName) {

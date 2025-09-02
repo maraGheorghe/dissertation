@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class VideoUtils {
 
     private static final Logger log = LoggerFactory.getLogger(VideoUtils.class);
@@ -39,7 +38,7 @@ public class VideoUtils {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = r.readLine()) != null) {
-                    log.info(line);
+                    log.debug(line);
                 }
             }
             log.info("Finished ffmpeg process");
@@ -49,5 +48,4 @@ public class VideoUtils {
                 throw new MediaUploadException("FFmpeg failed with exit code " + exit);
             }
     }
-
 }

@@ -1,7 +1,6 @@
 package com.example.audiouploadservice.kafka.producer;
 
 import com.example.audiouploadservice.model.MediaFile;
-import com.example.audiouploadservice.utils.VideoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -14,7 +13,7 @@ import java.util.UUID;
 public class MediaEventProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private static final Logger log = LoggerFactory.getLogger(VideoUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(MediaEventProducer.class);
 
     public MediaEventProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
