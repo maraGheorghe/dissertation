@@ -10,5 +10,4 @@ class Segment(Base):
     transcript_id = Column(UUID(as_uuid=True), ForeignKey("transcripts.id"))
     start = Column(Float)
     end = Column(Float)
-    speaker = Column(String)
     text = Column(String)

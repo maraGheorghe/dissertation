@@ -12,6 +12,3 @@ compute_type = "float16" if device == "cuda" else "int8"
 print(f"[{now_iso()}] Loading faster-whisper '{MODEL_SIZE}' on {device} ({compute_type})...")
 whisper_model = WhisperModel(MODEL_SIZE, device=device, compute_type=compute_type)
 print(f"[{now_iso()}] Model loaded.")
-
-
-

@@ -7,7 +7,7 @@ from kafka import KafkaConsumer, KafkaProducer
 from pathlib import Path
 from dotenv import load_dotenv
 
-from db_model.audio_file_event import AudioFileUploadedEvent
+from communication.audio_file_event import AudioFileUploadedEvent
 from storage.minio_client import download_audio_file
 from processor.voice_transcriber import transcribe_with_whisper_per_chunk
 from storage.session import SessionLocal
@@ -20,16 +20,13 @@ BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 TOPIC = os.getenv("KAFKA_TOPIC")
 TOPIC_PRODUCER = os.getenv("KAFKA_TOPIC_PRODUCER")
 DOWNLOAD_DIR = Path("resources/downloads")
-SEPARATED_DIR = Path("resources/separated")
 
 def prepare_directories():
-    for folder in [DOWNLOAD_DIR, SEPARATED_DIR]:
-        folder.mkdir(parents=True, exist_ok=True)
-        print(f"Directory ready: {folder}")
+    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    print(f"Directory ready: {DOWNLOAD_DIR}")
 
 def parse_event(data: dict) -> AudioFileUploadedEvent:
-    # Dacă JSON-ul are datetime ca listă [yyyy, MM, dd, hh, mm, ss, µs]
-    microseconds = data["uploadTime"][-1] // 1000  # convert µs → ms
+    microseconds = data["uploadTime"][-1] // 1000  # convert NANOS → MICROSECONDS pentru datetime()
     return AudioFileUploadedEvent(
         id=uuid.UUID(data["id"]),
         storage_key=data["originalName"],
@@ -39,19 +36,17 @@ def parse_event(data: dict) -> AudioFileUploadedEvent:
 def handle_audio_uploaded_event(event: AudioFileUploadedEvent):
     session = SessionLocal()
 
-    # 1. Creează transcript entry
+    # 1) creează transcript entry in_progress
     transcript = Transcript(id=event.id)
     session.add(transcript)
     session.commit()
 
-    # 2. Transcrie fișierul audio în segmente
+    # 2) descarcă fișierul din MinIO pentru transcriere
     local_path = DOWNLOAD_DIR / event.storage_key
     download_audio_file(
         storage_key=event.storage_key,
         destination_path=str(local_path)
     )
-
-    # segments = transcribe_audio(str(local_path))
 
     for seg in transcribe_with_whisper_per_chunk(str(local_path)):
         print(seg)
@@ -59,21 +54,19 @@ def handle_audio_uploaded_event(event: AudioFileUploadedEvent):
             transcript_id=event.id,
             start=seg["start"],
             end=seg["end"],
-            speaker=seg["speaker"],
             text=seg["text"]
         )
         session.add(s)
         session.commit()
 
-    # 4. Marchează transcriptul ca finalizat
+    # 4) marchează transcriptul ca finalizat
     transcript.status = "completed"
     session.commit()
     session.close()
 
-    print(f"✅ Transcript salvat în DB: {event.id}")
+    print(f"Transcript salvat în DB: {event.id}")
 
-
-def start_consumer():
+def start_kafka():
     prepare_directories()
 
     print(f"Listening on topic `{TOPIC}`...")
@@ -99,13 +92,12 @@ def start_consumer():
                 produced_data = {
                     "id": str(event.id),
                 }
-
                 producer.send(TOPIC_PRODUCER, value=produced_data)
+                producer.flush()
                 print(f"Event sent to producer: {produced_data}")
             except Exception as e:
                 print("Audio already added.")
                 print(e)
-
 
     except KeyboardInterrupt:
         print("\n Consumer stopped by user.")
