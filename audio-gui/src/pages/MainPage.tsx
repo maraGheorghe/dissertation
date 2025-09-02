@@ -22,7 +22,7 @@ type Segment = {
     text: string;
 };
 
-export default function UploadPage() {
+export default function MainPage() {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [blobUrl, setBlobUrl] = useState<string | undefined>();
@@ -57,7 +57,7 @@ export default function UploadPage() {
                     timeoutId = setTimeout(fetchTranscript, 3000);
                 }
             } catch (error) {
-                timeoutId = setTimeout(fetchTranscript, 5000);
+                timeoutId = setTimeout(fetchTranscript, 3000);
             }
         };
 
@@ -96,8 +96,9 @@ export default function UploadPage() {
     const handleNewFile = () => {
         setCurrentTime(0);
         setTranscriptData(null);
-        setIsTranscriptLoading(false);
+        setIsTranscriptLoading(true);
         setShowUpload(true);
+        setSummaryData(null);
     };
 
     const handleSummarize = async () => {
