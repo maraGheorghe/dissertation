@@ -1,4 +1,4 @@
-from kafka.kafka import start_consumer
+from communication.kafka_communication import start_consumer
 from db_model.base import Base
 from storage.session import engine
 

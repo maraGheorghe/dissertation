@@ -89,5 +89,5 @@ def get_transcript(transcript_id: str):
     )
 
 if __name__ == "__main__":
-    uvicorn.run("main_api:app", host="0.0.0.0", port=8002, reload=True)
+    uvicorn.run("main_api:app", host="0.0.0.0", port=8082, reload=True)
 

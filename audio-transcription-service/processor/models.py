@@ -1,6 +1,6 @@
 import torch
-from faster_whisper import WhisperModel
 import os
+from faster_whisper import WhisperModel
 
 from utils.utils import now_iso
 

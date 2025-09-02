@@ -18,7 +18,7 @@ NUM_THREAD   = os.cpu_count() or 4
 
 # ----------------- Chunking + generation knobs -----------------
 # If the whole transcript is <= SINGLE_MAX_CHARS, we do ONE call.
-SINGLE_MAX_CHARS     = int(os.getenv("SINGLE_MAX_CHARS", "3500"))
+SINGLE_MAX_CHARS     = int(os.getenv("SINGLE_MAX_CHARS", "4000"))
 SINGLE_NUM_PREDICT   = int(os.getenv("SINGLE_NUM_PREDICT", "380"))
 
 # If longer, we chunk to ~MAX_CHARS with small overlap, do "map" bullets, then one "reduce".
@@ -30,12 +30,12 @@ REDUCE_NUM_PREDICT   = int(os.getenv("REDUCE_NUM_PREDICT", "220"))
 # ----------------- Prompts -----------------
 
 PROMPT_LANGUAGE = (
-    "What language is this? (e.g. english, romanian)\n \"\"\"{text}\"\"\"\nRespond in one word, the language name."
+    "What language is this? (e.g. english, romanian). Respond in one word, the language name.\n \"\"\"{text}\"\"\"\n"
 )
 
 
 PROMPT_SINGLE = (
-    "Summarize the following transcript into clean Markdown in {lang}. Include:\n"
+    "Summarize the following transcript into clean Markdown in {language}. Include:\n"
     "- A short abstract (2–3 sentences)\n"
     "- Then 5–7 concise bullets highlighting key ideas\n\n"
     "Transcript:\n\"\"\"{text}\"\"\""
@@ -43,14 +43,14 @@ PROMPT_SINGLE = (
 
 PROMPT_MAP = (
     "From the following transcript part, extract exactly 3 concise bullets (≤15 words each).\n"
-    "Write it in the {lang} language.\n"
+    "Write it in the {language} language.\n"
     "No preamble, just bullets.\n\n"
     "Part:\n\"\"\"{text}\"\"\""
 )
 
 PROMPT_REDUCE = (
     "You are given many bullets extracted from a long transcript. "
-    "Write a final, well-structured summary in the {lang} language:\n"
+    "Write a final, well-structured summary in the {language} language:\n"
     "- A short summary (≈200–300 words)\n"
     "- bullets with the most important points (≤15 words each)\n"
     "Avoid repetition, merge duplicates, keep names/dates/numbers exact.\n\n"

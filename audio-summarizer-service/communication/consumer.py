@@ -4,10 +4,10 @@ import uuid
 
 from pathlib import Path
 from dotenv import load_dotenv
+from kafka import KafkaConsumer
 
 from model.audio_file_event import AudioFileTranslated
 from llama_model.summarizer import create_summary
-from kafka import KafkaConsumer
 
 load_dotenv()
 
@@ -27,7 +27,7 @@ def start_consumer():
     consumer = KafkaConsumer(
         TOPIC,
         bootstrap_servers=BOOTSTRAP_SERVERS,
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         enable_auto_commit=True,
         value_deserializer=lambda v: json.loads(v.decode('utf-8'))
     )
@@ -45,7 +45,7 @@ def start_consumer():
 
 
     except KeyboardInterrupt:
-        print("\n🛑 Consumer stopped by user.")
+        print("\nConsumer stopped by user.")
     finally:
         consumer.close()
 

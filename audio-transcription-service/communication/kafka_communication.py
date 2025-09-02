@@ -80,7 +80,7 @@ def start_consumer():
     consumer = KafkaConsumer(
         TOPIC,
         bootstrap_servers=BOOTSTRAP_SERVERS,
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         enable_auto_commit=True,
         value_deserializer=lambda v: json.loads(v.decode('utf-8'))
     )
