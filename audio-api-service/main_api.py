@@ -1,4 +1,6 @@
 from typing import List, Optional
+
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -85,4 +87,7 @@ def get_transcript(transcript_id: str):
         id=transcript_id,
         text=getattr(s, "content", None),
     )
+
+if __name__ == "__main__":
+    uvicorn.run("main_api:app", host="0.0.0.0", port=8002, reload=True)
 
