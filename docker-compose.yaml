@@ -1,5 +1,4 @@
 services:
-
   zoo1:
     image: confluentinc/cp-zookeeper:7.8.0
     hostname: zoo1
@@ -100,12 +99,36 @@ services:
       - backend
       - kafka-net
 
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # Uncomment if you want GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]
+    #           driver: nvidia
+    #           count: all
+    # Or simpler (Compose v2) on Linux:
+    # gpus: all
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "curl -sf http://localhost:11434/api/tags >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
 
 volumes:
   pgdata1:
   minio-data:
+  ollama:
 
 networks:
   backend:
   kafka-net:
-

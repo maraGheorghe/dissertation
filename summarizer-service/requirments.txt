@@ -1,5 +1,0 @@
-sqlalchemy
-dotenv
-httpx
-kafka-python
-psycopg2
