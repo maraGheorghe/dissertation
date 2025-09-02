@@ -200,7 +200,7 @@ export default function Transcript({ currentTime, segments, isLoading, isDone, s
                 )}
             </div>
 
-            {/* Modal for selecting file format */}
+            {/* Modal for selecting a file format */}
             {isModalOpen && (
                 <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div

@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { uploadAudioFile } from "../api/upload";
-import { useNavigate } from "react-router-dom";
-import { useBlobStore } from "../stores/blobStore";
 import MediaPlayer from "../components/MediaPlayer";
 import Transcript from "../components/Transcripts";
 import Subtitle from "../components/Subtitle";
@@ -35,7 +33,6 @@ export default function UploadPage() {
     const [isTranscriptLoading, setIsTranscriptLoading] = useState(false);
     const [summaryData, setSummaryData] = useState<string | null>(null);
     const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-    const navigate = useNavigate();
 
     // Fetch transcript data when videoId changes
     useEffect(() => {
@@ -81,7 +78,7 @@ export default function UploadPage() {
             setShowUpload(false); // Hide upload section after successful upload
             setLoading(true);
         } catch (err) {
-            alert("Eroare la încărcare fișier");
+            alert("Error loading the file");
         } finally {
             setLoading(false);
         }
@@ -90,7 +87,7 @@ export default function UploadPage() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] ?? null;
         setFile(selectedFile);
-        // Reset previous states when new file is selected
+        // Reset previous states when a new file is selected
         setCurrentTime(0);
         setTranscriptData(null);
         setIsTranscriptLoading(false);
@@ -133,7 +130,7 @@ export default function UploadPage() {
                 <div className="w-full max-w-2xl mx-auto p-6">
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/30 p-8">
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
-                            Încarcă un fișier audio
+                            Upload Video/Audio File
                         </h1>
 
                         {/* File Upload Area */}
@@ -159,8 +156,8 @@ export default function UploadPage() {
                                         </div>
                                     ) : (
                                         <div>
-                                            <p className="text-gray-600 text-lg mb-2">Apasă pentru a selecta un fișier</p>
-                                            <p className="text-sm text-gray-500">Suportă fișiere audio și video</p>
+                                            <p className="text-gray-600 text-lg mb-2">Click to select a file</p>
+                                            <p className="text-sm text-gray-500">Video and audio files supported</p>
                                         </div>
                                     )}
                                 </div>
@@ -180,10 +177,10 @@ export default function UploadPage() {
                             {loading ? (
                                 <div className="flex items-center justify-center gap-3">
                                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-transparent"></div>
-                                    Se încarcă...
+                                    Loading...
                                 </div>
                             ) : (
-                                "Încarcă fișierul"
+                                "Load file"
                             )}
                         </button>
 
@@ -192,7 +189,7 @@ export default function UploadPage() {
                             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div className="flex items-center gap-3">
                                     <div className="animate-pulse w-3 h-3 bg-blue-500 rounded-full"></div>
-                                    <p className="text-blue-700 text-sm">Procesăm fișierul tău... Acest proces poate dura câteva minute.</p>
+                                    <p className="text-blue-700 text-sm">Processing your file... This may take a few minutes.</p>
                                 </div>
                             </div>
                         )}
@@ -223,7 +220,7 @@ export default function UploadPage() {
             {/* Main content: video on the left, transcript on the right */}
             <div className="w-full max-w-6xl mx-auto px-6 pt-8 pb-12">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left: player + live subtitles */}
+                    {/* Left: player and live subtitles */}
                     <div className="lg:col-span-7">
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/30 p-6 h-full">
                             <MediaPlayer url={blobUrl} onProgress={setCurrentTime} />

@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 type Segment = {
     start: number;
     end: number;

@@ -1,5 +1,3 @@
-import { baseURL } from "./gateway";
-
 export async function uploadAudioFile(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);

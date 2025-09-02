@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {useLocation, useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getTranscriptById } from "../api/transcript";
 import MediaPlayer from "../components/MediaPlayer";
-import {baseURL} from "../api/gateway";
-import {useBlobStore} from "../stores/blobStore";
+import { useBlobStore } from "../stores/blobStore";
 
 type Segment = {
     start: number;
@@ -35,12 +34,6 @@ export default function TranscriptPage() {
         const finalUrl = blobUrlRef.current || `http://localhost:8081/api/audio/${id}`;
         setAudioUrl(finalUrl);
 
-        // return () => {
-        //     if (blobUrlRef.current) {
-        //         URL.revokeObjectURL(blobUrlRef.current);
-        //         useBlobStore.getState().clearBlobUrl(id!);
-        //     }
-        // };
     }, [id]);
 
 
@@ -68,21 +61,6 @@ export default function TranscriptPage() {
     return (
         <div className="p-6 max-w-5xl mx-auto">
             <h1 className="text-3xl font-semibold mb-4 text-gray-800">Transcript</h1>
-
-            {/*<audio*/}
-            {/*    ref={audioRef}*/}
-            {/*    controls*/}
-            {/*    className="w-full rounded mb-6 shadow"*/}
-            {/*    src={`http://localhost:8081/api/audio/${id}`} // adaptează path-ul*/}
-            {/*/>*/}
-
-            {/*<video*/}
-            {/*    controls*/}
-            {/*    src={audioUrl}*/}
-            {/*    className="w-full"*/}
-            {/*    onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}*/}
-            {/*    onError={(e) => console.error("VIDEO ERROR", e)}*/}
-            {/*/>*/}
 
             <MediaPlayer
                 url={audioUrl}

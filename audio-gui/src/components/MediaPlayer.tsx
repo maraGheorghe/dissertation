@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react"
+import React, { useState } from "react"
 import ReactPlayer from "react-player"
 
 interface MediaPlayerProps {
@@ -7,7 +7,6 @@ interface MediaPlayerProps {
 }
 
 export default function MediaPlayer({ url, onProgress }: MediaPlayerProps) {
-    const [isReady, setIsReady] = useState(false)
     const [playing, setIsPlaying] = useState(false)
 
     return (
@@ -18,7 +17,6 @@ export default function MediaPlayer({ url, onProgress }: MediaPlayerProps) {
                 controls
                 width="100%"
                 height="auto"
-                onReady={() => setIsReady(true)}
                 onTimeUpdate={(video) => {
                     onProgress(video.currentTarget.currentTime)
                     setIsPlaying(playing)
