@@ -1,13 +1,11 @@
 import os
-import re
-import json
 import httpx
 from sqlalchemy import asc
 
 from db.session import SessionLocal
-from model import Segment, Transcript
-from model.audio_file_event import AudioFileTranslated
-from model.summary import Summary
+from db_model import Segment, Transcript
+from communication.audio_file_event import AudioFileTranslated
+from db_model.summary import Summary
 
 # ----------------- LLM / Ollama config -----------------
 OLLAMA_URL   = os.getenv("OLLAMA_URL", "http://localhost:11434")
@@ -89,7 +87,6 @@ def _ollama_generate(prompt: str, num_predict: int) -> str:
         return r.json()["response"].strip()
 
 def _bullets_only(text: str) -> list[str]:
-    """Extract lines that look like bullets; fallback to splitting lines."""
     lines = [ln.strip() for ln in text.splitlines()]
     bullets = []
     for ln in lines:
@@ -102,17 +99,16 @@ def _bullets_only(text: str) -> list[str]:
         else:
             # sometimes the model returns plain lines; treat as bullets
             bullets.append(ln)
-    # keep it short
     return [b for b in bullets if b][:3]
 
 # ----------------- Main entry -----------------
 def create_summary(event: AudioFileTranslated):
     session = SessionLocal()
     try:
-        # 1) Find transcript (you indicated Transcript.id == event.id)
+        # 1) Find transcript
         transcript = (
             session.query(Transcript)
-            .filter(Transcript.id == str(event.id))  # if UUID(as_uuid=True), drop str()
+            .filter(Transcript.id == str(event.id))
             .one_or_none()
         )
         if transcript is None:
@@ -135,7 +131,6 @@ def create_summary(event: AudioFileTranslated):
             print("Transcript has no text.")
             return
 
-        # Warm-up (optional, avoids first-call latency)
         language = "english"
         try:
             language = _ollama_generate(PROMPT_LANGUAGE.format(text=full_text[:SINGLE_MAX_CHARS]), num_predict=10)

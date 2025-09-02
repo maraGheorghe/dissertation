@@ -1,5 +1,5 @@
 from communication.consumer import start_consumer
-from model.base import Base
+from db_model.base import Base
 from db.session import engine
 
 if __name__ == "__main__":

@@ -2,19 +2,16 @@ import json
 import os
 import uuid
 
-from pathlib import Path
 from dotenv import load_dotenv
 from kafka import KafkaConsumer
 
-from model.audio_file_event import AudioFileTranslated
+from communication.audio_file_event import AudioFileTranslated
 from llama_model.summarizer import create_summary
 
 load_dotenv()
 
 BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 TOPIC = os.getenv("KAFKA_TOPIC")
-DOWNLOAD_DIR = Path("resources/downloads")
-SEPARATED_DIR = Path("resources/separated")
 
 def parse_event(data: dict) -> AudioFileTranslated:
     return AudioFileTranslated(
@@ -40,12 +37,10 @@ def start_consumer():
             try:
                 create_summary(event)
             except Exception as e:
-                print("Audio already added.")
+                print("Error summarizing.")
                 print(e)
-
 
     except KeyboardInterrupt:
         print("\nConsumer stopped by user.")
     finally:
         consumer.close()
-
